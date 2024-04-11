@@ -29,12 +29,14 @@ public class BenchmarkRunner {
     static final Map<String, Integer> GRAPH_VERTEX_NUM = Map.of(
             "sg-wiki-topcats", 1791489,
             "sg-com-lj.ungraph", 3997962,
+            "sg-youtube-u-growth", 3223589,
             "sg-soc-pokec-relationships", 1632803,
             "sg-stackoverflow", 2601977,
             "sg-orkut", 3072441,
             "sg-ldbc-sf1k-knows", 3298534,
             "sg-graph500-25", 17062472,
-            "sg-com-friendster.ungraph", 65608366
+            "sg-com-friendster.ungraph", 65608366,
+            "sg-semantic-scholar", 65695514
     );
 
     public static void main(String[] args) {
@@ -53,8 +55,12 @@ public class BenchmarkRunner {
         // varied workload sizes
         scalabilityWorkloadThrExpRunner();
         scalabilityWorkloadLatencyExpRunner();
-    }
 
+        // memory consumption
+        memoryConsumptionRunner();
+        scalabilityFixedSlideMemRunner();
+        scalabilityFixedRangeMemRunner();
+    }
 
     private static void throughputRunner() {
         List<String> results = new ArrayList<>();
@@ -130,6 +136,22 @@ public class BenchmarkRunner {
                 repeat,
                 results
         );
+        setupThrExp(
+                methods,
+                "per-eva",
+                "sg-semantic-scholar",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30))),
+                repeat,
+                results
+        );
+        setupThrExp(
+                methods,
+                "per-eva",
+                "sg-youtube-u-growth",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30))),
+                repeat,
+                results
+        );
         writeResult(results, BENCHMARK_RESULTS + "throughput-per-eva-" + LocalDateTime.now() + ".txt");
     }
 
@@ -190,6 +212,18 @@ public class BenchmarkRunner {
                 "sg-com-friendster.ungraph",
                 List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
         );
+        setupLatencyExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupLatencyExp(
+                methods,
+                expType,
+                "sg-youtube-u-growth",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
     }
 
     private static void scalabilityFixedSlideThrExpRunner() {
@@ -229,6 +263,21 @@ public class BenchmarkRunner {
                 repeat,
                 results
         );
+
+        setupThrExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 40), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3))
+                ),
+                repeat,
+                results
+        );
+
         writeResult(results, BENCHMARK_RESULTS + "throughput-" + expType + "-" + LocalDateTime.now() + ".txt");
     }
 
@@ -256,6 +305,18 @@ public class BenchmarkRunner {
                 methods,
                 expType,
                 "sg-com-friendster.ungraph",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 40), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3))
+                )
+        );
+
+        setupLatencyExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
                 List.of(
                         Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
                         Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
@@ -300,6 +361,19 @@ public class BenchmarkRunner {
                 repeat,
                 results
         );
+
+        setupThrExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 2)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 4)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
+                ),
+                repeat,
+                results
+        );
         writeResult(results, BENCHMARK_RESULTS + "throughput-" + expType + "-" + LocalDateTime.now() + ".txt");
     }
 
@@ -331,6 +405,17 @@ public class BenchmarkRunner {
                         Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
                 )
         );
+
+        setupLatencyExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 2)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 4)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
+                )
+        );
     }
 
     private static void scalabilityWorkloadThrExpRunner() {
@@ -356,7 +441,6 @@ public class BenchmarkRunner {
                 results,
                 getWorkLoads("sg-graph500-25", sizes)
         );
-
         setupThrExp(
                 new String[]{"DFS"},
                 expType,
@@ -368,8 +452,6 @@ public class BenchmarkRunner {
                 results,
                 getWorkLoads("sg-graph500-25", new int[]{1, 10})
         );
-
-
         setupThrExp(
                 methods,
                 expType,
@@ -381,11 +463,32 @@ public class BenchmarkRunner {
                 results,
                 getWorkLoads("sg-com-friendster.ungraph", sizes)
         );
-
         setupThrExp(
                 new String[]{"DFS"},
                 expType,
                 "sg-com-friendster.ungraph",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3))
+                ),
+                repeat,
+                results,
+                getWorkLoads("sg-com-friendster.ungraph", new int[]{1, 10})
+        );
+        setupThrExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3))
+                ),
+                repeat,
+                results,
+                getWorkLoads("sg-com-friendster.ungraph", sizes)
+        );
+        setupThrExp(
+                new String[]{"DFS"},
+                expType,
+                "sg-semantic-scholar",
                 List.of(
                         Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3))
                 ),
@@ -415,7 +518,6 @@ public class BenchmarkRunner {
                 ),
                 getWorkLoads("sg-graph500-25", sizes)
         );
-
         setupLatencyExp(
                 new String[]{"DFS"},
                 expType,
@@ -425,7 +527,6 @@ public class BenchmarkRunner {
                 ),
                 getWorkLoads("sg-graph500-25", new int[]{1, 10})
         );
-
         setupLatencyExp(
                 methods,
                 expType,
@@ -435,7 +536,6 @@ public class BenchmarkRunner {
                 ),
                 getWorkLoads("sg-com-friendster.ungraph", sizes)
         );
-
         setupLatencyExp(
                 new String[]{"DFS"},
                 expType,
@@ -445,6 +545,233 @@ public class BenchmarkRunner {
                 ),
                 getWorkLoads("sg-com-friendster.ungraph", new int[]{1, 10})
         );
+        setupLatencyExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3))
+                ),
+                getWorkLoads("sg-com-friendster.ungraph", sizes)
+        );
+        setupLatencyExp(
+                new String[]{"DFS"},
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3))
+                ),
+                getWorkLoads("sg-com-friendster.ungraph", new int[]{1, 10})
+        );
+
+    }
+
+    private static void memoryConsumptionRunner() {
+        String[] methods = {
+                "D-Tree",
+                "RWC",
+                "BIC",
+                "ET-Tree",
+                "HDT"
+        };
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-wiki-topcats",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-youtube-u-growth",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-soc-pokec-relationships",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-com-lj.ungraph",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-stackoverflow",
+                List.of(Pair.of(Duration.ofDays(180), Duration.ofDays(9)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-orkut",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-ldbc-sf1k-knows",
+                List.of(Pair.of(Duration.ofDays(20), Duration.ofDays(1)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-graph500-25",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-com-friendster.ungraph",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+        setupMemExp(
+                methods,
+                "per-eva",
+                "sg-semantic-scholar",
+                List.of(Pair.of(Duration.ofHours(10), Duration.ofMinutes(30)))
+        );
+    }
+
+    private static void scalabilityFixedSlideMemRunner() {
+        String expType = "fixed-slide";
+
+        String[] methods = {
+                "D-Tree",
+                "RWC",
+                "BIC"
+        };
+
+        setupMemExp(
+                methods,
+                expType,
+                "sg-graph500-25",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 40), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3))
+                )
+        );
+        setupMemExp(
+                methods,
+                expType,
+                "sg-com-friendster.ungraph",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 40), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3))
+                )
+        );
+        setupMemExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 10), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 20), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 40), Duration.ofHours(3)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3))
+                )
+        );
+    }
+
+    private static void scalabilityFixedRangeMemRunner() {
+        String expType = "fixed-range";
+        String[] methods = {
+                "D-Tree",
+                "RWC",
+                "BIC"
+        };
+        setupMemExp(
+                methods,
+                expType,
+                "sg-graph500-25",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 2)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 4)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
+                )
+        );
+        setupMemExp(
+                methods,
+                expType,
+                "sg-com-friendster.ungraph",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 2)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 4)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
+                )
+        );
+        setupMemExp(
+                methods,
+                expType,
+                "sg-semantic-scholar",
+                List.of(
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 2)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 4)),
+                        Pair.of(Duration.ofHours(3 * 80), Duration.ofHours(3 * 8))
+                )
+        );
+    }
+
+    private static void setupMemExp( // various sizes of workloads
+                                     String[] methods,
+                                     String expType,
+                                     String graph,
+                                     List<Pair<Duration, Duration>> rangeAndSlides) {
+
+        // get graph
+        List<StreamingEdge> streamingEdges = GraphUtils.readStreamingGraph(BENCHMARK_DATASETS + graph + ".txt", ",");
+
+        if (rangeAndSlides == null)
+            return;
+
+        System.out.println("Range and slide" + rangeAndSlides);
+        List<IntIntPair> workloads = getWorkLoad(graph, 100);
+        for (String method : methods)
+            runMemExp(
+                    graph,
+                    method,
+                    expType,
+                    rangeAndSlides,
+                    workloads,
+                    streamingEdges
+            );
+    }
+
+    private static void runMemExp(
+            String graph,
+            String method,
+            String expType,
+            List<Pair<Duration, Duration>> rangeSlides,
+            List<IntIntPair> workload,
+            List<StreamingEdge> streamingEdges) {
+        System.out.println("Start " + expType + " memory experiments for " + method + " on " + graph + " with ranges and slides of " + rangeSlides);
+        for (Pair<Duration, Duration> rangeSlide : rangeSlides) {
+            Duration range = rangeSlide.getFirst();
+            Duration slide = rangeSlide.getSecond();
+            List<Long> memoryResults = new ArrayList<>();
+            AbstractSlidingWindowConnectivity slidingWindowConnectivity = getSwc(method, range, slide, workload, graph, streamingEdges.get(0).timeStamp);
+            slidingWindowConnectivity.computeQueriesAndGetMemoryConsumption(
+                    streamingEdges,
+                    initializeOutput(workload.size()),
+                    memoryResults
+            );
+            writePerWindowResult(
+                    memoryResults,
+                    BENCHMARK_RESULTS + "memory-" + expType + "-" + rangeSlide + "-" + graph + "-" + method + "-" + "workload" + workload.size() + ".txt"
+            );
+            System.out.println("memory-" + expType + "-" + rangeSlide + "-" + graph + "-" + method + "-" + "workload" + workload.size());
+            for (Long l : memoryResults)
+                System.out.println(l);
+            System.gc();
+        }
     }
 
     private static void setupThrExp( // 100 queries
@@ -595,7 +922,7 @@ public class BenchmarkRunner {
                     initializeOutput(workload.size()),
                     result);
 
-            writeLatencyResult(result, BENCHMARK_RESULTS + "latency-" + exp + "-" + pair + "-" + graph + "-" + method + "-" + "workload" + workload.size() + "-" + LocalDateTime.now() + ".txt");
+            writePerWindowResult(result, BENCHMARK_RESULTS + "latency-" + exp + "-" + pair + "-" + graph + "-" + method + "-" + "workload" + workload.size() + "-" + LocalDateTime.now() + ".txt");
             System.gc();
         }
     }
@@ -640,7 +967,7 @@ public class BenchmarkRunner {
         }
     }
 
-    private static void writeLatencyResult(List<Long> result, String path) {
+    private static void writePerWindowResult(List<Long> result, String path) {
         FileWriter fileWriter;
         try {
             fileWriter = new FileWriter(path);

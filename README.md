@@ -21,7 +21,7 @@ This repository provides the BIC index, an index for processing graph connectivi
 
 3. `benchmark/datasets` and `benchmark/workloads` contains the datasets and workloads.
 
-4. Execute `nohup java -Xms768g -Xmx950g -cp target/swc-1.0-SNAPSHOT.jar ca.uw.dsg.swc.benchmark.BenchmarkRunner2 &` to reproduce the results. This can take weeks to complete all experiments. Make sure JDK 11 or higher is installed on the tested server. In case the server does not have enough memory for running experiments with extremely large graphs, like Friendster, comment on the settings with such graphs in [BenchmarkRunner](https://github.com/chaozhang-cs/bic/blob/main/src/main/java/ca/uw/dsg/swc/benchmark/BenchmarkRunner.java).
+4. Execute `nohup java -Xms768g -Xmx950g -cp target/swc-1.0-SNAPSHOT.jar ca.uw.dsg.swc.benchmark.BenchmarkRunner &` to reproduce the results. This can take weeks to complete all experiments. Make sure JDK 11 or higher is installed on the tested server. In case the server does not have enough memory for running experiments with extremely large graphs, like Friendster, comment on the settings with such graphs in [BenchmarkRunner](https://github.com/chaozhang-cs/bic/blob/main/src/main/java/ca/uw/dsg/swc/benchmark/BenchmarkRunner.java).
 
 5. The benchmark results are available under the directory `benchmark/results`.
 

@@ -4,6 +4,7 @@ import ca.uw.dsg.swc.AbstractSlidingWindowConnectivity;
 import ca.uw.dsg.swc.StreamingEdge;
 import ca.uw.dsg.swc.baselines.etr.SpanningTree;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
+import org.openjdk.jol.info.GraphLayout;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -12,6 +13,7 @@ import java.util.Queue;
 
 public class RecalculatingWindowConnectivity extends AbstractSlidingWindowConnectivity {
     private final Queue<StreamingEdge> window;
+    private SpanningTree.IncrementalConnectivity ufts;
 
     public RecalculatingWindowConnectivity(Duration range, Duration slide) {
         super(range, slide);
@@ -36,21 +38,28 @@ public class RecalculatingWindowConnectivity extends AbstractSlidingWindowConnec
 
     @Override
     public boolean query(int source, int target) {
-        SpanningTree.IncrementalConnectivity incrementalConnectivity = new SpanningTree.IncrementalConnectivity();
-        for (StreamingEdge e : window)
-            incrementalConnectivity.union(e.source, e.target);
-        return incrementalConnectivity.connected(source, target);
+        buildUfts();
+        return this.ufts.connected(source, target);
     }
 
     @Override
     public void query(List<IntIntPair> queries, List<List<Boolean>> outputStreams) {
+        buildUfts();
+        for (int i = 0, num = queries.size(); i < num; i++) {
+            IntIntPair intIntPair = queries.get(i);
+            outputStreams.get(i).add(this.ufts.connected(intIntPair.firstInt(), intIntPair.secondInt()));
+        }
+    }
+
+    private void buildUfts(){
         SpanningTree.IncrementalConnectivity incrementalConnectivity = new SpanningTree.IncrementalConnectivity();
         for (StreamingEdge e : window)
             incrementalConnectivity.union(e.source, e.target);
+        this.ufts = incrementalConnectivity;
+    }
 
-        for (int i = 0, num = queries.size(); i < num; i++) {
-            IntIntPair intIntPair = queries.get(i);
-            outputStreams.get(i).add(incrementalConnectivity.connected(intIntPair.firstInt(), intIntPair.secondInt()));
-        }
+    @Override
+    public long memoryConsumption() {
+        return GraphLayout.parseInstance(ufts).totalSize();
     }
 }

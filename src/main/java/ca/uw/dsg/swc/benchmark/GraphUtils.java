@@ -19,7 +19,6 @@ import java.util.*;
 import static ca.uw.dsg.swc.benchmark.WorkloadUtils.generateStreamingEdges;
 
 public class GraphUtils {
-
     public static final int RATE_PER_SECOND = 100;
 
     // method for preparing streaming graphs
@@ -32,6 +31,7 @@ public class GraphUtils {
                 "\t",
                 "#"
         );
+
         getGraphAndAddTimeStamps(
                 "./benchmark/datasets/com-lj.ungraph.txt",
                 "./benchmark/datasets/sg-com-lj.ungraph.txt",
@@ -158,6 +158,51 @@ public class GraphUtils {
                     }
                 }
                 streamingEdges.add(new StreamingEdge(source, target, Long.parseLong(data[2])));
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("Num of streaming edges in the queue: " + streamingEdges.size());
+        System.out.println("Num of loops: " + loop);
+        System.out.println("Num of multi-edges: " + multiEdge);
+        return streamingEdges;
+    }
+
+    public static List<StreamingEdge> readStreamingGraph2(String path, String split, int limit) {
+        List<StreamingEdge> streamingEdges;
+        Scanner scanner;
+        int loop = 0, multiEdge = 0;
+
+        int i = 0;
+
+        try {
+            scanner = new Scanner(new File(path));
+            streamingEdges = new ArrayList<>();
+            System.out.println("Loading graph: " + path);
+            HashSet<IntIntPair> set = new HashSet<>();
+            while (scanner.hasNext()) {
+                String line = scanner.nextLine();
+                String[] data = line.split(split);
+                int source = Integer.parseInt(data[0]), target = Integer.parseInt(data[1]);
+                if (source == target) { // avoid loop
+                    loop++;
+                    continue;
+                }
+                if (source > target) { // avoid multiple edge between vertices
+                    if (!set.add(IntIntPair.of(source, target))) {
+                        multiEdge++;
+                        continue;
+                    }
+                } else {
+                    if (!set.add(IntIntPair.of(target, source))) {
+                        multiEdge++;
+                        continue;
+                    }
+                }
+                streamingEdges.add(new StreamingEdge(source, target, Long.parseLong(data[2])));
+                if (i++ == limit)
+                    break;
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -300,6 +345,77 @@ public class GraphUtils {
             System.out.println("Num of streaming edges in the queue: " + streamingEdges.size());
             System.out.println("Num of loops: " + loop);
             System.out.println("Num of multi-edges: " + multiEdge);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void processSemanticScholarData(String read, String write) {
+        Scanner scanner;
+        try {
+            scanner = new Scanner(new File(read));
+
+            int loop = 0, multiEdge = 0;
+            Long2IntOpenHashMap map = new Long2IntOpenHashMap();
+
+            System.out.println("Loading graph: " + read);
+
+            HashSet<IntIntPair> set = new HashSet<>();
+
+            List<IntIntPair> edgeList = new ArrayList<>();
+
+            while (scanner.hasNext()) {
+                String line = scanner.nextLine();
+                String[] data = line.split(" ");
+
+                long s;
+                try {
+                    s = Long.parseLong(data[0]);
+                } catch (NumberFormatException e) {
+                    System.out.println(e.getMessage());
+                    continue;
+                }
+
+                long t;
+                try {
+                    t = Long.parseLong(data[1]);
+                } catch (NumberFormatException e) {
+                    System.out.println(e.getMessage());
+                    continue;
+                }
+
+                int source = map.computeIfAbsent(s, k -> map.size());
+                int target = map.computeIfAbsent(t, k -> map.size());
+
+                if (source == target) { // avoid loop
+                    loop++;
+                    continue;
+                }
+
+                if (source > target) { // avoid multiple edge between vertices
+                    if (!set.add(IntIntPair.of(source, target))) {
+                        multiEdge++;
+                        continue;
+                    }
+                } else {
+                    if (!set.add(IntIntPair.of(target, source))) {
+                        multiEdge++;
+                        continue;
+                    }
+                }
+
+                edgeList.add(IntIntPair.of(source, target));
+            }
+
+            set = null;
+
+            Queue<StreamingEdge> streamingEdges = generateStreamingEdges(edgeList, RATE_PER_SECOND);
+
+            edgeList = null;
+
+            writeStreamingGraph(write, streamingEdges);
+
+            System.out.println("Num of streaming edges in the queue: " + streamingEdges.size());
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

@@ -3,6 +3,7 @@ package ca.uw.dsg.swc.baselines.dtree;
 import ca.uw.dsg.swc.baselines.FullyDynamicConnectivity;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import org.openjdk.jol.info.GraphLayout;
 
 public class DTreeConnectivity implements FullyDynamicConnectivity {
     private final Int2ObjectOpenHashMap<DTNode> nodeHashMap;
@@ -69,8 +70,12 @@ public class DTreeConnectivity implements FullyDynamicConnectivity {
             nodeHashMap.remove(target, t);
     }
 
+
+
     @Override
     public String getName() {
         return "DTree Connectivity";
     }
+
+
 }

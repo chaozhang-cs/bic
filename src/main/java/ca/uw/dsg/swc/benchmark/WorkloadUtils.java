@@ -81,7 +81,7 @@ public class WorkloadUtils {
         }
     }
 
-    private static void generateAndWriteWorkload(String pathToGraph, String pathToWorkload) {
+    static void generateAndWriteWorkload(String pathToGraph, String pathToWorkload) {
         System.out.println("Loading graph: " + pathToGraph);
         SpanningTree.IncrementalConnectivity incrementalConnectivity = new SpanningTree.IncrementalConnectivity();
         Scanner scanner;

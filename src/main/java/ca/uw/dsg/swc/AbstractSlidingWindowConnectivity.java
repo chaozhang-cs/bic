@@ -42,7 +42,6 @@ public abstract class AbstractSlidingWindowConnectivity {
         long startOfCurrentWindow = streamingEdge.timeStamp;
         insert(streamingEdge);
 
-
         while (streamingEdgeIterator.hasNext()) { // make the first window instance full
             streamingEdge = streamingEdgeIterator.next();
             if (streamingEdge.timeStamp - startOfCurrentWindow < range)
@@ -143,6 +142,47 @@ public abstract class AbstractSlidingWindowConnectivity {
         }
     }
 
+    public void computeQueriesAndGetMemoryConsumption(Collection<StreamingEdge> inputStream, List<List<Boolean>> outputStreams, List<Long> memoryConsumptionPerWindow) {
+        if (inputStream.isEmpty())
+            return;
+
+        final int num = outputStreams.size();
+        if (workload.size() != num)
+            return;
+
+        Iterator<StreamingEdge> streamingEdgeIterator = inputStream.iterator();
+        StreamingEdge streamingEdge = streamingEdgeIterator.next();
+        long startOfCurrentWindow = streamingEdge.timeStamp;
+        insert(streamingEdge);
+
+        while (streamingEdgeIterator.hasNext()) { // make the first window instance full
+            streamingEdge = streamingEdgeIterator.next();
+            if (streamingEdge.timeStamp - startOfCurrentWindow < range)
+                insert(streamingEdge);
+            else
+                break;
+        }
+
+        query(workload, outputStreams);
+        startOfCurrentWindow += slide;
+        evict(startOfCurrentWindow); // first evict
+        insert(streamingEdge);
+
+
+        while (streamingEdgeIterator.hasNext()) {
+            streamingEdge = streamingEdgeIterator.next();
+            if (streamingEdge.timeStamp - startOfCurrentWindow >= range) { // compute query result
+                query(workload, outputStreams);
+                startOfCurrentWindow += slide;
+
+                memoryConsumptionPerWindow.add(memoryConsumption()); // capturing the memory used
+
+                evict(startOfCurrentWindow);
+            }
+            insert(streamingEdge);
+        }
+    }
+
     public abstract void insert(StreamingEdge StreamingEdge);
 
     // evict all the streaming edges, whose timestamp are less than the lessThan time
@@ -151,4 +191,6 @@ public abstract class AbstractSlidingWindowConnectivity {
     public abstract boolean query(int source, int target);
 
     public abstract void query(List<IntIntPair> queries, List<List<Boolean>> outputStreams);
+
+    public abstract long memoryConsumption();
 }

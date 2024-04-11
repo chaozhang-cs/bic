@@ -3,6 +3,7 @@ package ca.uw.dsg.swc.baselines;
 import ca.uw.dsg.swc.AbstractSlidingWindowConnectivity;
 import ca.uw.dsg.swc.StreamingEdge;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
+import org.openjdk.jol.info.GraphLayout;
 
 import java.time.Duration;
 import java.util.*;
@@ -53,5 +54,9 @@ public class FdcSlidingWindowConnectivity extends AbstractSlidingWindowConnectiv
 //        System.out.println("Number of edges in the window: " + window.size());
     }
 
+    @Override
+    public long memoryConsumption() {
+        return GraphLayout.parseInstance(fdc).totalSize();
+    }
 
 }

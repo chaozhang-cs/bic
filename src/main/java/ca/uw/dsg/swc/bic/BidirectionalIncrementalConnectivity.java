@@ -3,6 +3,7 @@ package ca.uw.dsg.swc.bic;
 import ca.uw.dsg.swc.AbstractSlidingWindowConnectivity;
 import ca.uw.dsg.swc.StreamingEdge;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
+import org.openjdk.jol.info.GraphLayout;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -114,6 +115,11 @@ public class BidirectionalIncrementalConnectivity extends AbstractSlidingWindowC
                 outputStreams.get(i).add(bf.queryWithBF(windowIndexInChunk, i));
         if (++windowIndexInChunk == chunkSize)
             windowIndexInChunk = 0;
+    }
+
+    @Override
+    public long memoryConsumption() {
+        return GraphLayout.parseInstance(this).totalSize();
     }
 
     private static class BackwardForwardBufferPair {
